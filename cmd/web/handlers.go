@@ -14,7 +14,15 @@ func home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ts, err := template.ParseFiles("./ui/html/pages/home.tmpl.html")
+	files := []string{
+		"./ui/html/base.html",
+		"./ui/html/partials/nav.html",
+		"./ui/html/pages/home.tmpl.html",
+	}
+
+	// ParseFiles reads the files and stores the templates in a template set (ts)
+	// destructuring the files slice into variablues using ...
+	ts, err := template.ParseFiles(files...)
 
 	if err != nil{
 		log.Print(err.Error())
@@ -22,7 +30,8 @@ func home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = ts.Execute(w,nil)
+	// executeTemplate() method to write the content of base
+	err = ts.ExecuteTemplate(w,"base",nil)
 	if err != nil {
 		log.Print(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

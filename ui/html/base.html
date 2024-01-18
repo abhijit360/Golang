@@ -1,0 +1,27 @@
+{{define "base"}}
+<!-- define "base and end action act as a wrapper to degine a distinct named template called base" -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!-- linkes to the css styles and favicon using the fileserver -->
+    <link rel='stylesheet' href='/static/css/main.css'>
+    <link rel='shortcut icon' href='/static/img/favicon.ico' type='image/x-icon'>
+    <!-- Google Fonts Link-->
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700'>
+
+    <title>{{template "title" .}} - Snippetbox</title>
+  </head>
+  <body>
+    <header>
+      <h1><a href="/">Snippetbox</a></h1>
+    </header>
+    {{template "nav" .}}
+    {{block "sidebar" .}}
+        <p>This content is default as a sidebar template does not exist.</p>
+    {{end}}
+    <main>{{template "main" .}}</main>
+    <footer>Powered by <a href="https://golang.org/">Go</a></footer>
+  </body>
+</html>
+{{end}}
