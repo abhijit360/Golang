@@ -1,10 +1,12 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"log/slog"
 	"net/http"
 	"os"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 
@@ -12,6 +14,21 @@ import (
 // build handlers against this struct
 type application struct {
 	logger *slog.Logger
+}
+
+func openDB(dsn string) (*sql.DB, error){
+	db, err := sql.Open("mysql",dsn)
+	if err != nil {
+		return nil,err
+	}
+
+	err = db.Ping()
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	return db, nil
 }
 
 func main() {
@@ -31,6 +48,7 @@ func main() {
 	// the message will show when you add the "-help" flag when calling go run
 	addr := flag.String("addr", ":4000", "HTPP network Address")
 
+	dsn := flag.String("dsn", "web:pass@/snippetbox?parseTime=true", "MySQL Data Source Name")
 	// gets the addr variable from the command prompt
 	flag.Parse() 
 		
@@ -39,24 +57,21 @@ func main() {
 		AddSource: true,
 	}))
 
+	logger.Info("starting server", "addr", *addr)
+	
+	db, err := openDB(*dsn)
+	if err != nil{
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	defer db.Close()
+
 	app := &application{
 		logger: logger,
 	}
 
-	mux := http.NewServeMux()
-
-	// create a file server which serves files out of the "./ui/static" directory
-	//the path provided to http.Dir is realtive to the project directory root 
-	// relative to cmd 
-	fileServer := http.FileServer(http.Dir("./ui/static"))
-	mux.Handle("/static/", http.StripPrefix("/static",fileServer))
-
-
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet/view", app.snippetView)
-	mux.HandleFunc("/snippet/create", app.snippetCreate)
-	app.logger.Info("starting server on", "addr",*addr)
-	err := http.ListenAndServe(*addr, mux)
+	err = http.ListenAndServe(*addr, app.routes())
 	app.logger.Error(err.Error())
 	os.Exit(1)
 }
