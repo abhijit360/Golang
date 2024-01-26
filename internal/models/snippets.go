@@ -56,11 +56,36 @@ func (m *SnippetModel) Get(id int) (Snippet, error) {
 	}
 
 	return s, nil
-
-	return Snippet{}, nil
 }
 
 // return the 10 most recently created snippets
-func (m *SnippetModel) latest() ([]Snippet, error){
-	return nil, nil
+func (m *SnippetModel) Latest() ([]Snippet, error){
+	statement := `SELECT id, title, content, created, expires FROM snippets WHERE expires > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 10`
+	
+	rows, err := m.DB.Query(statement)
+	if err != nil {
+		return nil, err
+	}
+
+	// ensure that the sql.Rows result set is always properly closed before the Latest() method returns
+	// statement should come *after* you check for an error from the Query() method
+	defer rows.Close()
+
+	var snippets []Snippet
+
+	for rows.Next() {
+		// create a pointer to a new zeoed Snippet struct
+		var s Snippet
+
+		// use rpws.Scan() to copy the values from each field in the row to the 
+		err = rows.Scan(&s.ID,&s.Title, &s.Content, &s.Created, &s.Expires)
+		if err != nil {
+			return nil, err
+		}
+		
+		//apend it to the slice of snippets
+		snippets = append(snippets, s)
+	}
+
+	return snippets, nil
 }
