@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"snippetbox.abhijitLearning/internal/models"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -14,6 +15,7 @@ import (
 // build handlers against this struct
 type application struct {
 	logger *slog.Logger
+	snippets *models.SnippetModel
 }
 
 func openDB(dsn string) (*sql.DB, error){
@@ -22,7 +24,7 @@ func openDB(dsn string) (*sql.DB, error){
 		return nil,err
 	}
 
-	err = db.Ping()
+	err = db.Ping() // checks if the connection is alive
 	if err != nil {
 		db.Close()
 		return nil, err
@@ -69,6 +71,7 @@ func main() {
 
 	app := &application{
 		logger: logger,
+		snippets: & models.SnippetModel{DB: db},
 	}
 
 	err = http.ListenAndServe(*addr, app.routes())
